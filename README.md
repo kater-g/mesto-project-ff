@@ -1,2 +1,3 @@
 # Проектная работа Mesto
-https://github.com/kater-g/mesto-project-ff
+
+https://kater-g.github.io/mesto-project-ff/
