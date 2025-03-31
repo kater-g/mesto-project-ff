@@ -55,7 +55,13 @@ function checkLike(card, userId) {
 export function deleteCard(button, cardId) {
   const closestCard = button.closest(".card");
 
-  deleteOwnCard(cardId, closestCard);
+  deleteOwnCard(cardId)
+    .then(() => {
+      closestCard.remove();
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 }
 
 //Функция "лайка" карточки
@@ -63,8 +69,22 @@ export function likeCard(likeButton, cardId, likesCount) {
   const isLiked = likeButton.classList.contains("card__like-button_is-active");
 
   if (!isLiked) {
-    putLike(cardId, likesCount, likeButton);
+    putLike(cardId)
+      .then((res) => {
+        likesCount.textContent = res.likes.length;
+        likeButton.classList.add("card__like-button_is-active");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   } else {
-    deleteLike(cardId, likesCount, likeButton);
+    deleteLike(cardId)
+      .then((res) => {
+        likeButton.classList.remove("card__like-button_is-active");
+        likesCount.textContent = res.likes.length;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 }

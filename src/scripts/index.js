@@ -41,7 +41,7 @@ const editProfileImageForm = document.forms["edit-image"];
 const imageProfilePopupButton =
   editProfileImageForm.querySelector(".popup__button");
 
-const valueForSubmitButtons = "Сохранить";
+const defaultValueForSubmitButtons = "Сохранить";
 const valueForLoadingSubmitButtons = "Сохранение...";
 
 //Настройки валидации форм
@@ -108,7 +108,6 @@ editProfileButton.addEventListener("click", () => {
   const nameProfileContent = nameProfile.textContent;
   const jobProfileContent = jobProfile.textContent;
 
-  editProfilePopupButton.textContent = valueForSubmitButtons;
   nameInput.placeholder = nameProfileContent;
   jobInput.placeholder = jobProfileContent;
 
@@ -119,16 +118,12 @@ editProfileButton.addEventListener("click", () => {
 
 //Слушатель кнопки для добавление карточки
 addCardButton.addEventListener("click", () => {
-  addCardPopupButton.textContent = valueForSubmitButtons;
-
   openModal(newCardPopup);
   clearValidation(addCardForm, validationConfig);
 });
 
 //Слушатель для обновления аватара пользователя
 imageProfileContainer.addEventListener("click", () => {
-  imageProfilePopupButton.textContent = valueForSubmitButtons;
-
   openModal(imageProfilePopup);
   clearValidation(editProfileImageForm, validationConfig);
 });
@@ -136,17 +131,24 @@ imageProfileContainer.addEventListener("click", () => {
 //Функция отправки формы для обновления аватара пользователя
 function handleProfileImageFormSubmit(evt) {
   const imageLinkInput = editProfileImageForm.elements["link"].value;
+  const avatarProfile = imageLinkInput;
 
   evt.preventDefault();
 
   contentLoading(true, imageProfilePopupButton, valueForLoadingSubmitButtons);
 
-  imageProfile.src = imageLinkInput;
-  const avatarProfile = imageProfile.src;
-
-  updateImageProfile(avatarProfile, contentLoading, imageProfilePopupButton);
-
-  closeModal(imageProfilePopup);
+  updateImageProfile(avatarProfile)
+    .then((res) => {
+      res.avatar = avatarProfile;
+      imageProfile.src = res.avatar;
+      closeModal(imageProfilePopup);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+    .finally(() => {
+      contentLoading(false, imageProfilePopupButton);
+    });
 
   editProfileImageForm.reset();
 }
@@ -169,17 +171,18 @@ function handleProfileFormSumbit(evt) {
   nameProfile.textContent = nameInput.value;
   jobProfile.textContent = jobInput.value;
 
-  editSelfProfile(
-    nameProfile.textContent,
-    jobProfile.textContent,
-    contentLoading,
-    editProfilePopupButton
-  );
-
-  nameInput.value = "";
-  jobInput.value = "";
-
-  closeModal(profilePopup);
+  editSelfProfile(nameProfile.textContent, jobProfile.textContent)
+    .then((res) => {
+      res.name = nameProfile.textContent;
+      res.about = jobProfile.textContent;
+      closeModal(profilePopup);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+    .finally(() => {
+      contentLoading(false, editProfilePopupButton);
+    });
 }
 
 //Функция отправки формы добавления карточки
@@ -196,23 +199,19 @@ function handleCardFormSubmit(evt) {
 
   contentLoading(true, addCardPopupButton, valueForLoadingSubmitButtons);
 
-  postOwnCard(
-    newCard,
-    imagePopup,
-    likeCard,
-    myId,
-    deleteCard,
-    placesContainer,
-    createCard,
-    contentLoading,
-    addCardPopupButton
-  );
-
-  closeModal(newCardPopup);
-
-  addCardNameInput.value = "";
-  addCardLinkInput.value = "";
-
+  postOwnCard(newCard)
+    .then((res) => {
+      placesContainer.prepend(
+        createCard(res, imagePopup, likeCard, myId, deleteCard)
+      );
+      closeModal(newCardPopup);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+    .finally(() => {
+      contentLoading(false, addCardPopupButton);
+    });
   addCardForm.reset();
 }
 
@@ -220,6 +219,8 @@ function handleCardFormSubmit(evt) {
 function contentLoading(isLoading, button, buttonText) {
   if (isLoading) {
     button.textContent = buttonText;
+  } else {
+    button.textContent = defaultValueForSubmitButtons;
   }
 }
 
